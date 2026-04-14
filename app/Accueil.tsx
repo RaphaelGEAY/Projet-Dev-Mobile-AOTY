@@ -54,8 +54,11 @@ const styles = StyleSheet.create({
   },
   link: {
     fontSize: 16,
-    color: '#007bff',
-    marginTop: 20,
-    textDecorationLine: 'underline',
+    color: '#F56F2F',
+    backgroundColor: '#007bff',
+    padding: 10,
+    margin: 5,
+    borderRadius: 50,
+    textAlign: 'center',
   },
 });

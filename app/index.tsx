@@ -1,61 +1,13 @@
 import { router } from 'expo-router';
-import { StyleSheet, Text, View } from 'react-native';
+import { useEffect } from 'react';
 
-export default function Accueil() {
+export default function Index() {
+  useEffect(() => {
+    // Délai pour s'assurer que le layout est monté
+    setTimeout(() => {
+      router.replace('/accueil');
+    }, 0);
+  }, []);
 
-  return (
-    <View style={styles.container}>
-
-      <Text style={styles.title}>AOTY</Text>
-
-      <Text style={styles.subtitle}>New releases</Text>
-
-      <Text style={styles.link} onPress={() => router.push('/home')}>
-        Aller à index pour manger le caca
-      </Text>
-    </View>
-  );
+  return null;
 }
-
-// Styles pour les composants
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
-    backgroundColor: '#1FBBC6',
-    padding: 50,
-  },
-  title: {
-    fontSize: 24,
-    fontWeight: 'bold',
-    color: '#333',
-    marginBottom: 10,
-  },
-  subtitle: {
-    fontSize: 16,
-    color: '#A6C',
-    marginBottom: 20,
-  },
-  counter: {
-    fontSize: 48,
-    fontWeight: 'bold',
-    color: '#FF00FF',
-    marginBottom: 30,
-  },
-  button: {
-    fontSize: 24,
-    color: '#fff',
-    backgroundColor: '#007bff',
-    padding: 10,
-    margin: 5,
-    borderRadius: 50,
-    textAlign: 'center',
-  },
-  link: {
-    fontSize: 16,
-    color: '#007bff',
-    marginTop: 20,
-    textDecorationLine: 'underline',
-  },
-});
