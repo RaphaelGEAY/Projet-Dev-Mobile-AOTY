@@ -45,49 +45,82 @@ export default function Home() {
   // Tout est enveloppé dans une View (conteneur) avec des styles
   return (
     // View principale : conteneur flexible qui centre son contenu
-    <View>
+    <View style={styles.container}>
       {/* Titre de bienvenue : texte stylisé avec des propriétés CSS-like */}
-      <Text>Bienvenue dans l'app</Text>
+      <Text style={styles.title}>Bienvenue dans l'app</Text>
 
       {/* Sous-titre explicatif */}
-      <Text>Ceci est la page d'accueil minimale.</Text>
+      <Text style={styles.subtitle}>Ceci est la page d'accueil minimale.</Text>
 
       {/* Affichage du compteur : montre la valeur actuelle de count */}
-      <Text>{count}</Text>
-      <Text>{count}</Text>
-      <Text>{count}</Text>
-      <Text>{count}</Text>
-      <Text>{count}</Text>
-      <Text>{count}</Text>
-      <Text>{count}</Text>
-      <Text>{count}</Text>
-      <Text>{count}</Text>
-      <Text>{count}</Text>
-      <Text>{count}</Text>
+      <Text style={styles.counter}>{count}</Text>
 
       {/* Boutons pour modifier le compteur */}
       {/* Text avec onPress : agit comme un bouton cliquable */}
-      <Text onPress={increment}>
+      <Text style={styles.button} onPress={increment}>
         ---L Ajouter J---
       </Text>
-      <Text onPress={decrement}>
+      <Text style={styles.button} onPress={decrement}>
         ---L Enlever J---
       </Text>
-      <Text onPress={explose}>
+      <Text style={styles.button} onPress={explose}>
         ---L Explode J---
       </Text>
-      <Text onPress={divide}>
+      <Text style={styles.button} onPress={divide}>
         ---L Divide  J---
       </Text>
-      <Text onPress={reset}>
+      <Text style={styles.button} onPress={reset}>
         ---L  Reset  J---
       </Text>
 
       {/* Lien pour naviguer vers la page À propos */}
       {/* router.push('/home/about') : ajoute '/home/about' à la pile de navigation (route typée) */}
-      <Text onPress={() => router.push('/about')}>
+      <Text style={styles.link} onPress={() => router.push('/about')}>
         Aller à À propos
       </Text>
     </View>
   );
 }
+
+// Styles pour les composants
+const styles = StyleSheet.create({
+  container: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    backgroundColor: '#f5f5f5',
+    padding: 20,
+  },
+  title: {
+    fontSize: 24,
+    fontWeight: 'bold',
+    color: '#333',
+    marginBottom: 10,
+  },
+  subtitle: {
+    fontSize: 16,
+    color: '#666',
+    marginBottom: 20,
+  },
+  counter: {
+    fontSize: 48,
+    fontWeight: 'bold',
+    color: '#007bff',
+    marginBottom: 30,
+  },
+  button: {
+    fontSize: 18,
+    color: '#fff',
+    backgroundColor: '#007bff',
+    padding: 10,
+    margin: 5,
+    borderRadius: 5,
+    textAlign: 'center',
+  },
+  link: {
+    fontSize: 16,
+    color: '#007bff',
+    marginTop: 20,
+    textDecorationLine: 'underline',
+  },
+});
