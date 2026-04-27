@@ -1,87 +1,102 @@
-import { View, Text, Image, StyleSheet } from "react-native";
-import { Album } from "../types/album";
+import { useState } from "react";
+import { Pressable, StyleSheet, Text, View } from "react-native";
+import { Image } from "expo-image";
 
-export default function AlbumCard({ album }: { album: Album }) {
+import { Album } from "@/types/album";
+
+type AlbumCardProps = {
+  album: Album;
+  onPress?: () => void;
+};
+
+export default function AlbumCard({ album, onPress }: AlbumCardProps) {
+  const [coverFailed, setCoverFailed] = useState(false);
+
   return (
-    <View style={styles.card}>
-      <Image source={{ uri: album.cover }} style={styles.cover} />
+    <Pressable style={styles.card} onPress={onPress}>
+      {coverFailed ? (
+        <View style={styles.coverFallback}>
+          <Text style={styles.coverFallbackText}>
+            {album.artist.slice(0, 1).toUpperCase()}
+          </Text>
+        </View>
+      ) : (
+        <Image
+          source={{ uri: album.coverUrl }}
+          style={styles.cover}
+          contentFit="cover"
+          transition={180}
+          onError={() => setCoverFailed(true)}
+        />
+      )}
 
       <Text style={styles.artist} numberOfLines={1}>
         {album.artist}
       </Text>
 
-      <Text style={styles.title} numberOfLines={1}>
+      <Text style={styles.title} numberOfLines={2}>
         {album.title}
       </Text>
 
-      <View style={styles.scores}>
-        <View style={styles.scoreCriticBox}>
-          <Text style={styles.scoreCritic}>{album.critic}</Text>
-        </View>
-
-        <View style={styles.scoreUserBox}>
-          <Text style={styles.scoreUser}>{album.user}</Text>
-        </View>
+      <View style={styles.metaRow}>
+        <Text style={styles.metaChip}>{album.year}</Text>
+        <Text style={styles.metaChip}>{album.typeLabel}</Text>
       </View>
-    </View>
+    </Pressable>
   );
 }
 
 const styles = StyleSheet.create({
   card: {
-    width: "150%",
+    width: "48%",
     marginBottom: 18,
+    gap: 8,
   },
-
   cover: {
     width: "100%",
     aspectRatio: 1,
-    borderRadius: 6,
-    marginBottom: 6,
+    borderRadius: 14,
+    backgroundColor: "#151921",
   },
-
+  coverFallback: {
+    width: "100%",
+    aspectRatio: 1,
+    borderRadius: 14,
+    backgroundColor: "#151921",
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  coverFallbackText: {
+    color: "#f4c95d",
+    fontSize: 38,
+    fontWeight: "800",
+  },
   artist: {
-    color: "#ccc",
+    color: "#98a1af",
     fontSize: 12,
-    marginBottom: 1,
-  },
-
-  title: {
-    color: "white",
-    fontSize: 13,
     fontWeight: "600",
-    marginBottom: 6,
   },
-
-  scores: {
+  title: {
+    color: "#f5f7fa",
+    fontSize: 15,
+    fontWeight: "700",
+    lineHeight: 20,
+    minHeight: 40,
+  },
+  metaRow: {
     flexDirection: "row",
-    justifyContent: "space-between",
-    paddingRight: 4,
+    flexWrap: "wrap",
+    gap: 8,
   },
-
-  scoreCriticBox: {
-    backgroundColor: "#1f3d1f",
-    paddingVertical: 3,
-    paddingHorizontal: 8,
-    borderRadius: 4,
-  },
-
-  scoreUserBox: {
-    backgroundColor: "#1f2d3d",
-    paddingVertical: 3,
-    paddingHorizontal: 8,
-    borderRadius: 4,
-  },
-
-  scoreCritic: {
-    color: "#4CAF50",
+  metaChip: {
+    backgroundColor: "#151921",
+    color: "#d8dde6",
+    borderColor: "#262d38",
+    borderWidth: 1,
+    paddingHorizontal: 10,
+    paddingVertical: 6,
+    borderRadius: 999,
+    fontSize: 12,
     fontWeight: "700",
-    fontSize: 13,
-  },
-
-  scoreUser: {
-    color: "#2196F3",
-    fontWeight: "700",
-    fontSize: 13,
   },
 });
