@@ -1,8 +1,9 @@
 {
   "expo": {
-    "name": "aaa",
-    "slug": "aaa",
+    "name": "aoty",
+    "slug": "aoty",
     "version": "1.0.0",
+    "owner": "aotymobile",
     "orientation": "portrait",
     "icon": "./assets/images/icon.png",
     "scheme": "aaa",
@@ -43,6 +44,18 @@
     "experiments": {
       "typedRoutes": false,
       "reactCompiler": true
+    },
+    "extra": {
+      "router": {},
+      "eas": {
+        "projectId": "94e64a84-5a61-4160-9775-f9867c32d026"
+      }
+    },
+    "runtimeVersion": {
+      "policy": "appVersion"
+    },
+    "updates": {
+      "url": "https://u.expo.dev/94e64a84-5a61-4160-9775-f9867c32d026"
     }
   }
 }
