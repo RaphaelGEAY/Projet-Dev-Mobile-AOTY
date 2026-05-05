@@ -1,20 +1,19 @@
 {
   "expo": {
-    "name": "aoty",
-    "slug": "aoty",
+    "name": "expo54-template",
+    "slug": "expo54-template",
     "version": "1.0.0",
-    "owner": "aotymobile",
     "orientation": "portrait",
     "icon": "./assets/images/icon.png",
-    "scheme": "aaa",
+    "scheme": "expo54template",
     "userInterfaceStyle": "automatic",
-    "newArchEnabled": false,
+    "newArchEnabled": true,
     "ios": {
       "supportsTablet": true
     },
     "android": {
       "adaptiveIcon": {
-        "backgroundColor": "#FF00FF",
+        "backgroundColor": "#E6F4FE",
         "foregroundImage": "./assets/images/android-icon-foreground.png",
         "backgroundImage": "./assets/images/android-icon-background.png",
         "monochromeImage": "./assets/images/android-icon-monochrome.png"
@@ -42,20 +41,8 @@
       ]
     ],
     "experiments": {
-      "typedRoutes": false,
-      "reactCompiler": false
-    },
-    "extra": {
-      "router": {},
-      "eas": {
-        "projectId": "94e64a84-5a61-4160-9775-f9867c32d026"
-      }
-    },
-    "runtimeVersion": {
-      "policy": "appVersion"
-    },
-    "updates": {
-      "url": "https://u.expo.dev/94e64a84-5a61-4160-9775-f9867c32d026"
+      "typedRoutes": true,
+      "reactCompiler": true
     }
   }
 }
