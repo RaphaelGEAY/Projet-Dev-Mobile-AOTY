@@ -1,33 +1,17 @@
-import { initializeApp, type FirebaseOptions, getApp, getApps } from "firebase/app";
+import { initializeApp, getApp, getApps } from "firebase/app";
 import { getAuth, type Auth } from "firebase/auth";
 import { getFirestore, type Firestore } from "firebase/firestore";
+import { firebaseConfig } from "@/services/firebase-config";
 
-const firebaseEnv = [
-  ["EXPO_PUBLIC_FIREBASE_API_KEY", process.env.EXPO_PUBLIC_FIREBASE_API_KEY],
-  ["EXPO_PUBLIC_FIREBASE_AUTH_DOMAIN", process.env.EXPO_PUBLIC_FIREBASE_AUTH_DOMAIN],
-  ["EXPO_PUBLIC_FIREBASE_PROJECT_ID", process.env.EXPO_PUBLIC_FIREBASE_PROJECT_ID],
-  ["EXPO_PUBLIC_FIREBASE_STORAGE_BUCKET", process.env.EXPO_PUBLIC_FIREBASE_STORAGE_BUCKET],
-  [
-    "EXPO_PUBLIC_FIREBASE_MESSAGING_SENDER_ID",
-    process.env.EXPO_PUBLIC_FIREBASE_MESSAGING_SENDER_ID,
-  ],
-  ["EXPO_PUBLIC_FIREBASE_APP_ID", process.env.EXPO_PUBLIC_FIREBASE_APP_ID],
-] as const;
+const firebaseEntries = Object.entries(firebaseConfig) as Array<
+  [keyof typeof firebaseConfig, string | undefined]
+>;
 
-export const missingFirebaseConfigKeys = firebaseEnv
+export const missingFirebaseConfigKeys = firebaseEntries
   .filter(([, value]) => !value)
   .map(([key]) => key);
 
 export const isFirebaseConfigured = missingFirebaseConfigKeys.length === 0;
-
-const firebaseConfig: FirebaseOptions = {
-  apiKey: process.env.EXPO_PUBLIC_FIREBASE_API_KEY ?? "",
-  authDomain: process.env.EXPO_PUBLIC_FIREBASE_AUTH_DOMAIN ?? "",
-  projectId: process.env.EXPO_PUBLIC_FIREBASE_PROJECT_ID ?? "",
-  storageBucket: process.env.EXPO_PUBLIC_FIREBASE_STORAGE_BUCKET ?? "",
-  messagingSenderId: process.env.EXPO_PUBLIC_FIREBASE_MESSAGING_SENDER_ID ?? "",
-  appId: process.env.EXPO_PUBLIC_FIREBASE_APP_ID ?? "",
-};
 
 const firebaseApp = isFirebaseConfigured
   ? getApps().length > 0
