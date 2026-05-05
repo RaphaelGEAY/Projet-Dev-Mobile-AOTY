@@ -14,7 +14,7 @@ import { Stack, useLocalSearchParams } from "expo-router";
 import { fetchAlbumDetails } from "@/services/api";
 import { useSocial } from "@/services/social";
 import { AlbumDetails } from "@/types/album";
-import { ReviewTarget } from "@/types/social";
+import { ReviewTarget, TrackReview } from "@/types/social";
 
 const RATING_OPTIONS = [1, 2, 3, 4, 5];
 
@@ -28,15 +28,25 @@ function formatReviewDate(value: string) {
 
 export default function AlbumDetailsScreen() {
   const params = useLocalSearchParams<{ id: string }>();
-  const { currentUser, getTrackReviews, getUserTrackReview, saveTrackReview } =
-    useSocial();
+  const {
+    currentUser,
+    firebaseConfigured,
+    getMyTrackReview,
+    saveTrackReview,
+    setupMessage,
+    subscribeToTrackReviews,
+  } = useSocial();
   const [album, setAlbum] = useState<AlbumDetails | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [selectedTrackId, setSelectedTrackId] = useState<string | null>(null);
+  const [selectedReviews, setSelectedReviews] = useState<TrackReview[]>([]);
+  const [reviewsError, setReviewsError] = useState<string | null>(null);
+  const [reviewsLoading, setReviewsLoading] = useState(false);
   const [reviewText, setReviewText] = useState("");
   const [rating, setRating] = useState(4);
   const [reviewStatus, setReviewStatus] = useState<string | null>(null);
+  const [submittingReview, setSubmittingReview] = useState(false);
 
   useEffect(() => {
     let cancelled = false;
@@ -104,14 +114,9 @@ export default function AlbumDetailsScreen() {
     };
   }, [album, selectedTrack]);
 
-  const selectedReviews = useMemo(
-    () => (selectedTarget ? getTrackReviews(selectedTarget) : []),
-    [getTrackReviews, selectedTarget],
-  );
-
   const userReview = useMemo(
-    () => (selectedTarget ? getUserTrackReview(selectedTarget) : undefined),
-    [getUserTrackReview, selectedTarget],
+    () => (selectedTarget ? getMyTrackReview(selectedTarget) : undefined),
+    [getMyTrackReview, selectedTarget],
   );
 
   useEffect(() => {
@@ -127,13 +132,41 @@ export default function AlbumDetailsScreen() {
     setRating(4);
   }, [userReview, selectedTrackId, currentUser?.id]);
 
-  const handleSaveReview = () => {
+  useEffect(() => {
+    if (!selectedTarget || !firebaseConfigured) {
+      setSelectedReviews([]);
+      setReviewsError(null);
+      setReviewsLoading(false);
+      return;
+    }
+
+    setReviewsLoading(true);
+    setReviewsError(null);
+
+    const unsubscribe = subscribeToTrackReviews(
+      selectedTarget,
+      (reviews) => {
+        setSelectedReviews(reviews);
+        setReviewsLoading(false);
+      },
+      (nextError) => {
+        setReviewsError(nextError);
+        setReviewsLoading(false);
+      },
+    );
+
+    return unsubscribe;
+  }, [firebaseConfigured, selectedTarget, subscribeToTrackReviews]);
+
+  const handleSaveReview = async () => {
     if (!selectedTarget) {
       setReviewStatus("Choisis un morceau avant de poster un avis.");
       return;
     }
 
-    const result = saveTrackReview({
+    setSubmittingReview(true);
+
+    const result = await saveTrackReview({
       ...selectedTarget,
       rating,
       comment: reviewText,
@@ -141,6 +174,7 @@ export default function AlbumDetailsScreen() {
 
     if (!result.ok) {
       setReviewStatus(result.error);
+      setSubmittingReview(false);
       return;
     }
 
@@ -149,6 +183,7 @@ export default function AlbumDetailsScreen() {
         ? "Ton avis a ete mis a jour."
         : "Ton avis a ete publie sur ce morceau.",
     );
+    setSubmittingReview(false);
   };
 
   return (
@@ -244,18 +279,9 @@ export default function AlbumDetailsScreen() {
                       <Text style={styles.trackArtist}>{track.artist}</Text>
                     </View>
                     <View style={styles.trackSide}>
-                      <Text style={styles.trackReviewCount}>
-                        {
-                          getTrackReviews({
-                            albumId: album.id,
-                            albumTitle: album.title,
-                            trackId: track.id,
-                            trackTitle: track.title,
-                            artist: track.artist || album.artist,
-                          }).length
-                        }{" "}
-                        avis
-                      </Text>
+                      {selectedTrackId === track.id ? (
+                        <Text style={styles.trackReviewCount}>Selectionne</Text>
+                      ) : null}
                       <Text style={styles.trackLength}>{track.length ?? "--:--"}</Text>
                     </View>
                   </Pressable>
@@ -286,7 +312,12 @@ export default function AlbumDetailsScreen() {
                     </View>
                   </View>
 
-                  {currentUser ? (
+                  {!firebaseConfigured ? (
+                    <Text style={styles.copy}>
+                      {setupMessage ??
+                        "Ajoute la configuration Firebase pour activer les avis distants."}
+                    </Text>
+                  ) : currentUser ? (
                     <View style={styles.composer}>
                       <Text style={styles.composerLabel}>
                         {userReview ? "Modifier mon avis" : "Poster mon avis"}
@@ -330,11 +361,22 @@ export default function AlbumDetailsScreen() {
                       />
 
                       <Pressable
-                        style={styles.publishButton}
-                        onPress={handleSaveReview}
+                        style={[
+                          styles.publishButton,
+                          submittingReview && styles.publishButtonDisabled,
+                        ]}
+                        onPress={() => {
+                          if (!submittingReview) {
+                            void handleSaveReview();
+                          }
+                        }}
                       >
                         <Text style={styles.publishButtonText}>
-                          {userReview ? "Mettre a jour" : "Publier l'avis"}
+                          {submittingReview
+                            ? "Publication..."
+                            : userReview
+                              ? "Mettre a jour"
+                              : "Publier l'avis"}
                         </Text>
                       </Pressable>
                     </View>
@@ -350,27 +392,38 @@ export default function AlbumDetailsScreen() {
                   ) : null}
 
                   <View style={styles.reviewList}>
-                    {selectedReviews.map((review) => (
-                      <View key={review.id} style={styles.reviewCard}>
-                        <View style={styles.reviewCardHeader}>
-                          <View style={styles.reviewCardText}>
-                            <Text style={styles.reviewAuthor}>
-                              {review.authorName}
-                            </Text>
-                            <Text style={styles.reviewMeta}>
-                              {review.source === "user" ? "Ton avis" : "Communaute"}{" "}
-                              • {formatReviewDate(review.createdAt)}
-                            </Text>
+                    {reviewsLoading ? (
+                      <Text style={styles.copy}>Chargement des avis Firebase...</Text>
+                    ) : selectedReviews.length > 0 ? (
+                      selectedReviews.map((review) => (
+                        <View key={review.id} style={styles.reviewCard}>
+                          <View style={styles.reviewCardHeader}>
+                            <View style={styles.reviewCardText}>
+                              <Text style={styles.reviewAuthor}>
+                                {review.authorName}
+                              </Text>
+                              <Text style={styles.reviewMeta}>
+                                {currentUser?.id === review.authorId
+                                  ? "Ton avis"
+                                  : "Utilisateur"}{" "}
+                                • {formatReviewDate(review.updatedAt)}
+                              </Text>
+                            </View>
+                            <View style={styles.reviewRatingPill}>
+                              <Text style={styles.reviewRatingText}>
+                                {review.rating}/5
+                              </Text>
+                            </View>
                           </View>
-                          <View style={styles.reviewRatingPill}>
-                            <Text style={styles.reviewRatingText}>
-                              {review.rating}/5
-                            </Text>
-                          </View>
+                          <Text style={styles.reviewBody}>{review.comment}</Text>
                         </View>
-                        <Text style={styles.reviewBody}>{review.comment}</Text>
-                      </View>
-                    ))}
+                      ))
+                    ) : (
+                      <Text style={styles.copy}>
+                        {reviewsError ??
+                          "Aucun avis pour ce morceau pour l'instant. Sois le premier a en poster un."}
+                      </Text>
+                    )}
                   </View>
                 </>
               ) : (
@@ -630,6 +683,9 @@ const styles = StyleSheet.create({
     justifyContent: "center",
     paddingVertical: 14,
     paddingHorizontal: 16,
+  },
+  publishButtonDisabled: {
+    opacity: 0.7,
   },
   publishButtonText: {
     color: "#11141a",

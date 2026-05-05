@@ -12,26 +12,48 @@ function formatReviewDate(value: string) {
 }
 
 export default function ProfileScreen() {
-  const { currentUser, myReviews, signIn, signOut } = useSocial();
+  const {
+    authReady,
+    currentUser,
+    firebaseConfigured,
+    myReviews,
+    setupMessage,
+    signIn,
+    signOut,
+    signUp,
+  } = useSocial();
+  const [mode, setMode] = useState<"signup" | "signin">("signup");
   const [username, setUsername] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [status, setStatus] = useState<string | null>(null);
+  const [submitting, setSubmitting] = useState(false);
 
-  const handleSignIn = () => {
-    const result = signIn({ username, email, password });
+  const handleSubmit = async () => {
+    setSubmitting(true);
+
+    const result =
+      mode === "signup"
+        ? await signUp({ username, email, password })
+        : await signIn({ email, password });
 
     if (!result.ok) {
       setStatus(result.error);
+      setSubmitting(false);
       return;
     }
 
     setPassword("");
-    setStatus(`Bienvenue ${result.user.username}, ton compte local est actif.`);
+    setStatus(
+      mode === "signup"
+        ? `Compte cree pour ${result.user.username}.`
+        : `Bon retour ${result.user.username}.`,
+    );
+    setSubmitting(false);
   };
 
-  const handleSignOut = () => {
-    signOut();
+  const handleSignOut = async () => {
+    await signOut();
     setStatus("Tu es maintenant deconnecte.");
   };
 
@@ -44,9 +66,19 @@ export default function ProfileScreen() {
       >
         <Text style={styles.title}>Compte</Text>
         <Text style={styles.copy}>
-          Connecte-toi pour publier des avis sur les morceaux et retrouver tes
-          critiques dans l&apos;app.
+          Cree un vrai compte Firebase pour publier des avis sur les morceaux et
+          retrouver tes critiques depuis Firestore.
         </Text>
+
+        {!firebaseConfigured ? (
+          <View style={styles.card}>
+            <Text style={styles.sectionTitle}>Configuration requise</Text>
+            <Text style={styles.copy}>
+              {setupMessage ??
+                "Ajoute la configuration Firebase dans un fichier .env pour activer l'authentification."}
+            </Text>
+          </View>
+        ) : null}
 
         {currentUser ? (
           <View style={styles.card}>
@@ -66,7 +98,7 @@ export default function ProfileScreen() {
             </View>
 
             <View style={styles.badgeRow}>
-              <Text style={styles.badge}>Session locale</Text>
+              <Text style={styles.badge}>Session Firebase</Text>
               <Text style={styles.badge}>{myReviews.length} avis postes</Text>
             </View>
 
@@ -76,17 +108,48 @@ export default function ProfileScreen() {
           </View>
         ) : (
           <View style={styles.card}>
-            <Text style={styles.sectionTitle}>Connexion</Text>
+            <Text style={styles.sectionTitle}>Authentification</Text>
 
-            <TextInput
-              value={username}
-              onChangeText={setUsername}
-              style={styles.input}
-              placeholder="Pseudo"
-              placeholderTextColor="#66707d"
-              autoCapitalize="words"
-              selectionColor="#f4c95d"
-            />
+            <View style={styles.modeRow}>
+              <Pressable
+                style={[styles.modeChip, mode === "signup" && styles.modeChipActive]}
+                onPress={() => setMode("signup")}
+              >
+                <Text
+                  style={[
+                    styles.modeChipText,
+                    mode === "signup" && styles.modeChipTextActive,
+                  ]}
+                >
+                  Creer un compte
+                </Text>
+              </Pressable>
+              <Pressable
+                style={[styles.modeChip, mode === "signin" && styles.modeChipActive]}
+                onPress={() => setMode("signin")}
+              >
+                <Text
+                  style={[
+                    styles.modeChipText,
+                    mode === "signin" && styles.modeChipTextActive,
+                  ]}
+                >
+                  Se connecter
+                </Text>
+              </Pressable>
+            </View>
+
+            {mode === "signup" ? (
+              <TextInput
+                value={username}
+                onChangeText={setUsername}
+                style={styles.input}
+                placeholder="Pseudo"
+                placeholderTextColor="#66707d"
+                autoCapitalize="words"
+                selectionColor="#f4c95d"
+              />
+            ) : null}
 
             <TextInput
               value={email}
@@ -112,13 +175,27 @@ export default function ProfileScreen() {
               selectionColor="#f4c95d"
             />
 
-            <Pressable style={styles.primaryButton} onPress={handleSignIn}>
-              <Text style={styles.primaryButtonText}>Se connecter</Text>
+            <Pressable
+              style={[styles.primaryButton, submitting && styles.primaryButtonDisabled]}
+              onPress={() => {
+                if (!submitting) {
+                  void handleSubmit();
+                }
+              }}
+            >
+              <Text style={styles.primaryButtonText}>
+                {submitting
+                  ? "En cours..."
+                  : mode === "signup"
+                    ? "Creer mon compte"
+                    : "Se connecter"}
+              </Text>
             </Pressable>
 
             <Text style={styles.helperText}>
-              Prototype local: la session reste dans l&apos;app, sans backend ni
-              synchronisation distante pour le moment.
+              {authReady
+                ? "Le compte et les avis sont maintenant prevus pour etre synchronises avec Firebase."
+                : "Connexion a Firebase en cours..."}
             </Text>
           </View>
         )}
@@ -249,6 +326,32 @@ const styles = StyleSheet.create({
     paddingHorizontal: 12,
     paddingVertical: 8,
   },
+  modeRow: {
+    flexDirection: "row",
+    gap: 10,
+  },
+  modeChip: {
+    flex: 1,
+    backgroundColor: "#151921",
+    borderRadius: 14,
+    borderWidth: 1,
+    borderColor: "#262d38",
+    paddingHorizontal: 12,
+    paddingVertical: 12,
+    alignItems: "center",
+  },
+  modeChipActive: {
+    backgroundColor: "#f4c95d",
+    borderColor: "#f4c95d",
+  },
+  modeChipText: {
+    color: "#d8dde6",
+    fontSize: 13,
+    fontWeight: "700",
+  },
+  modeChipTextActive: {
+    color: "#11141a",
+  },
   input: {
     backgroundColor: "#151921",
     borderRadius: 14,
@@ -271,6 +374,9 @@ const styles = StyleSheet.create({
     justifyContent: "center",
     paddingVertical: 14,
     paddingHorizontal: 16,
+  },
+  primaryButtonDisabled: {
+    opacity: 0.7,
   },
   primaryButtonText: {
     color: "#11141a",

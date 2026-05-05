@@ -3,6 +3,7 @@ export type AccountSession = {
   username: string;
   email: string;
   joinedLabel: string;
+  joinedAt: string;
 };
 
 export type ReviewTarget = {
@@ -20,11 +21,16 @@ export type TrackReview = ReviewTarget & {
   authorId: string;
   authorName: string;
   createdAt: string;
-  source: "community" | "user";
+  updatedAt: string;
+};
+
+export type SignUpPayload = {
+  username: string;
+  email: string;
+  password: string;
 };
 
 export type SignInPayload = {
-  username: string;
   email: string;
   password: string;
 };
