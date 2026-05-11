@@ -2,12 +2,12 @@ import { useDeferredValue, useEffect, useState } from "react";
 import {
   ActivityIndicator,
   FlatList,
-  SafeAreaView,
   StyleSheet,
   Text,
   View,
 } from "react-native";
 import { router } from "expo-router";
+import { SafeAreaView } from "react-native-safe-area-context";
 
 import AlbumCard from "@/components/Albumcard";
 import SearchBar from "@/components/Searchbar";
