@@ -6,7 +6,7 @@
     "owner": "aotymobile",
     "orientation": "portrait",
     "icon": "./assets/images/icon.png",
-    "scheme": "aaa",
+    "scheme": "aoty",
     "userInterfaceStyle": "automatic",
     "newArchEnabled": false,
     "ios": {
